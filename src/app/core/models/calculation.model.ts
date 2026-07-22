@@ -1,6 +1,6 @@
 import { City, Enchant, GearCategory, ResourceType, Tier } from './enums';
 
-/** Modo de aquisição/venda de um item no mercado. */
+/** Modo de negociação no mercado. */
 export type OrderMode = 'SELL_ORDER' | 'BUY_ORDER';
 
 export interface PriceSnapshot {
@@ -8,6 +8,17 @@ export interface PriceSnapshot {
   sellPriceMin: number;
   buyPriceMax: number;
   isStale: boolean;
+}
+
+/** Lucro projetado para um dos dois modos de venda (Sell Order x Buy Order). */
+export interface OrderProfit {
+  /** Sell Order = lista e espera (referência: sellPriceMin do destino). Buy Order = venda imediata (referência: buyPriceMax do destino). */
+  mode: OrderMode;
+  revenuePerUnit: number;
+  profitPerUnitNoFocus: number;
+  profitPerUnitWithFocus: number;
+  marginPercentNoFocus: number;
+  marginPercentWithFocus: number;
 }
 
 /** Resultado de uma oportunidade de refino no Smart Route Finder. */
@@ -20,10 +31,8 @@ export interface RefiningOpportunity {
   buyCity: City | string;
   sellCity: City | string;
 
+  /** Custo de aquisição do bruto: compra imediata (sellPriceMin) na cidade de compra. */
   rawUnitCost: number;
-  rawOrderMode: OrderMode;
-  refinedUnitRevenue: number;
-  refinedOrderMode: OrderMode;
 
   rawQuantityPerUnit: number;
   returnRateNoFocus: number;
@@ -34,10 +43,8 @@ export interface RefiningOpportunity {
   costPerUnitWithFocus: number;
   taxRate: number;
 
-  profitPerUnitNoFocus: number;
-  profitPerUnitWithFocus: number;
-  marginPercentNoFocus: number;
-  marginPercentWithFocus: number;
+  sellOrderProfit: OrderProfit;
+  buyOrderProfit: OrderProfit;
 
   weightPerUnit: number;
   isStale: boolean;
@@ -57,14 +64,16 @@ export interface CraftingResult {
   useJournals: boolean;
   journalEmptyCost: number;
   journalFullRevenue: number;
-  journalNetCost: number;
+  journalItemsPerFill: number;
+  /** Custo líquido total de diários para a quantidade craftada (pode ser negativo = ganho). */
+  journalNetCostTotal: number;
 
+  localSellCity: City | string;
   sellPriceLocal: number;
   sellPriceBlackMarket: number;
-  localSellCity: City | string;
 
-  revenueLocal: number;
-  revenueBlackMarket: number;
+  revenueLocalTotal: number;
+  revenueBlackMarketTotal: number;
   taxRate: number;
 
   profitLocalNoFocus: number;

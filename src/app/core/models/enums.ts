@@ -136,6 +136,40 @@ export const GEAR_CATEGORY_LABELS: Record<GearCategory, string> = {
   [GearCategory.ArmorCloth]: 'Armadura de Tecido',
 };
 
+/** ID base do item de equipamento (convenção AODP) por categoria. */
+export const GEAR_BASE_ID: Record<GearCategory, string> = {
+  [GearCategory.WeaponSword]: 'T{tier}_2H_SWORD',
+  [GearCategory.WeaponBow]: 'T{tier}_2H_BOW',
+  [GearCategory.WeaponFirestaff]: 'T{tier}_MAIN_FIRESTAFF',
+  [GearCategory.ArmorPlate]: 'T{tier}_ARMOR_PLATE_SET1',
+  [GearCategory.ArmorLeather]: 'T{tier}_ARMOR_LEATHER_SET1',
+  [GearCategory.ArmorCloth]: 'T{tier}_ARMOR_CLOTH_SET1',
+};
+
+/**
+ * Recurso "primário" de cada categoria de equipamento, usado apenas para aproximar o RRR
+ * de crafting reaproveitando a árvore de Spec de coleta/refino do usuário (simplificação:
+ * o jogo possui árvores de especialização de crafting dedicadas por linha de equipamento).
+ */
+export const GEAR_PRIMARY_RESOURCE: Record<GearCategory, ResourceType> = {
+  [GearCategory.WeaponSword]: ResourceType.Ore,
+  [GearCategory.WeaponBow]: ResourceType.Wood,
+  [GearCategory.WeaponFirestaff]: ResourceType.Fiber,
+  [GearCategory.ArmorPlate]: ResourceType.Ore,
+  [GearCategory.ArmorLeather]: ResourceType.Hide,
+  [GearCategory.ArmorCloth]: ResourceType.Fiber,
+};
+
+/** Cidade com bônus de retorno de material para cada linha de equipamento (aproximado). */
+export const GEAR_BONUS_CITY: Record<GearCategory, City> = {
+  [GearCategory.WeaponSword]: City.FortSterling,
+  [GearCategory.ArmorPlate]: City.FortSterling,
+  [GearCategory.WeaponBow]: City.Martlock,
+  [GearCategory.ArmorLeather]: City.Martlock,
+  [GearCategory.WeaponFirestaff]: City.Lymhurst,
+  [GearCategory.ArmorCloth]: City.Lymhurst,
+};
+
 /** Tier em número (T4-T8) e nível de encantamento (0-4). */
 export type Tier = 4 | 5 | 6 | 7 | 8;
 export type Enchant = 0 | 1 | 2 | 3 | 4;

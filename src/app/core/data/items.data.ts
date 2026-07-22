@@ -1,7 +1,10 @@
-import { buildItemId, JournalItem, RawResourceItem, RefinedItem } from '../models/item.model';
+import { buildItemId, GearItem, JournalItem, RawResourceItem, RefinedItem } from '../models/item.model';
 import {
   Enchant,
   ENCHANTS,
+  GEAR_BASE_ID,
+  GEAR_CATEGORY_LABELS,
+  GearCategory,
   JOURNAL_BY_RESOURCE,
   JOURNAL_LABELS,
   REFINED_BY_RESOURCE,
@@ -98,6 +101,35 @@ export const JOURNAL_ITEMS: JournalItem[] = TIERS.filter((t) => t >= 4).flatMap(
     };
   }),
 );
+
+/** Peso aproximado (kg) de equipamentos: armas ~1.4x o peso do refinado, armaduras ~2x. */
+function gearWeight(tier: Tier, category: GearCategory): number {
+  const isArmor = category.startsWith('ARMOR');
+  return Number((refinedWeight(tier) * (isArmor ? 2 : 1.4)).toFixed(2));
+}
+
+export const GEAR_ITEMS: GearItem[] = TIERS.flatMap((tier) =>
+  ENCHANTS.flatMap((enchant) =>
+    (Object.values(GearCategory) as GearCategory[]).map((category) => {
+      const baseId = GEAR_BASE_ID[category].replace('{tier}', String(tier));
+      return {
+        id: buildItemId(baseId, enchant),
+        name: `${GEAR_CATEGORY_LABELS[category]} T${tier}${enchantSuffixName(enchant)}`,
+        tier,
+        enchant,
+        weight: gearWeight(tier, category),
+        kind: 'GEAR' as const,
+        category,
+      };
+    }),
+  ),
+);
+
+export function findGearItem(category: GearCategory, tier: Tier, enchant: Enchant): GearItem {
+  const item = GEAR_ITEMS.find((i) => i.category === category && i.tier === tier && i.enchant === enchant);
+  if (!item) throw new Error(`Gear item not found for ${category} T${tier}.${enchant}`);
+  return item;
+}
 
 export function journalFullId(emptyId: string): string {
   return emptyId.replace('_EMPTY', '_FULL');

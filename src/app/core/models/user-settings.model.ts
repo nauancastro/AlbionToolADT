@@ -43,6 +43,7 @@ export function createDefaultUserSettings(): UserSettings {
       [City.FortSterling]: DEFAULT_TAX_RATE,
       [City.Martlock]: DEFAULT_TAX_RATE,
       [City.Thetford]: DEFAULT_TAX_RATE,
+      [City.BlackMarket]: 8,
     },
     hasPremium: false,
     availableFocus: 5000,
