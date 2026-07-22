@@ -50,9 +50,13 @@ export interface RefiningOpportunity {
   isStale: boolean;
 }
 
-/** Resultado de cálculo de crafting para um item específico do carrinho. */
-export interface CraftingResult {
-  category: GearCategory;
+/** Resultado de cálculo (refino ou crafting) para um item específico do carrinho bulk. */
+export interface BulkResult {
+  cartItemId: string;
+  kind: 'REFINE' | 'CRAFT';
+  label: string;
+  category?: GearCategory;
+  resourceType?: ResourceType;
   tier: Tier;
   enchant: Enchant;
   quantity: number;

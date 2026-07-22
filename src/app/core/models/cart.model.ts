@@ -1,29 +1,68 @@
-import { City, Enchant, GearCategory, Tier } from './enums';
+import { City, Enchant, GearCategory, ResourceType, Tier } from './enums';
 
-/** Item do carrinho de Crafting/Refino em massa. */
-export interface CraftCartItem {
+export type CartItemKind = 'REFINE' | 'CRAFT';
+
+interface BaseCartItem {
   id: string;
-  category: GearCategory;
+  kind: CartItemKind;
   tier: Tier;
   enchant: Enchant;
   quantity: number;
   useJournals: boolean;
+  /** Cidade onde os materiais/brutos são comprados. */
   buyCity: City;
+  /** Cidade onde o refino/crafting acontece (define bônus de cidade). */
   craftCity: City;
+  /** Cidade de venda "local" (comparada com Black Market). */
   localSellCity: City;
-  /** Overrides manuais de preço de diário, usados quando a API não cobre o item. */
   manualJournalEmptyCost?: number;
   manualJournalFullRevenue?: number;
 }
 
-export function createCartItem(partial: Partial<CraftCartItem> & Pick<CraftCartItem, 'category' | 'tier' | 'enchant'>): CraftCartItem {
+/** Item de refino no carrinho: compra bruto e refina. */
+export interface RefineCartItem extends BaseCartItem {
+  kind: 'REFINE';
+  resourceType: ResourceType;
+}
+
+/** Item de crafting de equipamento no carrinho. */
+export interface CraftGearCartItem extends BaseCartItem {
+  kind: 'CRAFT';
+  category: GearCategory;
+}
+
+export type CartItem = RefineCartItem | CraftGearCartItem;
+
+function newId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function createRefineCartItem(
+  partial: Partial<RefineCartItem> & Pick<RefineCartItem, 'resourceType' | 'tier' | 'enchant'>,
+): RefineCartItem {
   return {
-    id: `${partial.category}-${partial.tier}-${partial.enchant}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: newId(),
+    kind: 'REFINE',
     quantity: 1,
     useJournals: false,
-    buyCity: partial.buyCity ?? City.Caerleon,
-    craftCity: partial.craftCity ?? City.Caerleon,
-    localSellCity: partial.localSellCity ?? City.Caerleon,
+    buyCity: City.Caerleon,
+    craftCity: City.Caerleon,
+    localSellCity: City.Caerleon,
+    ...partial,
+  };
+}
+
+export function createCraftCartItem(
+  partial: Partial<CraftGearCartItem> & Pick<CraftGearCartItem, 'category' | 'tier' | 'enchant'>,
+): CraftGearCartItem {
+  return {
+    id: newId(),
+    kind: 'CRAFT',
+    quantity: 1,
+    useJournals: false,
+    buyCity: City.Caerleon,
+    craftCity: City.Caerleon,
+    localSellCity: City.Caerleon,
     ...partial,
   };
 }
