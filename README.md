@@ -1,59 +1,67 @@
-# AlbionProfitTool
+# Albion Profit Radar
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.27.
+SPA em Angular para cálculo de lucro de **Refino**, **Crafting** e **Arbitragem (Flipping)**
+no Albion Online. Sem backend: tudo roda no navegador, com configurações persistidas em
+`LocalStorage` e cotações consumidas diretamente da
+[Albion Online Data Project API](https://www.albion-online-data.com/api/).
 
-## Development server
+## Módulos
 
-To start a local development server, run:
+- **Painel do Usuário** (`/painel`) — servidor, Spec por linha de recurso, foco diário,
+  bônus de ilha/servidor, taxas de loja por cidade, status Premium.
+- **Smart Route Finder** (`/rotas`) — escolha cidade de compra do bruto e cidade de
+  refino/venda; a tabela ranqueia T4-T8 × encantamentos .0-.4 por margem de lucro,
+  diferenciando Sell Order (lucro demorado) de Buy Order (lucro imediato).
+- **Carrinho de Craft/Refino** (`/carrinho`) — seleção múltipla de refinos e
+  equipamentos para calcular uma viagem completa: peso total (com sugestão de
+  montaria), economia de Diários, e comparativo Foco vs. Sem Foco / Venda Local vs.
+  Black Market.
 
-```bash
-ng serve
+## Arquitetura
+
+```
+src/app/
+  core/
+    models/     # enums e interfaces de domínio (itens, mercado, receitas, settings)
+    data/       # catálogo estático (itens gerados, receitas, cidades)
+    services/   # CacheService, MarketDataService, UserSettingsService,
+                # RefiningCalculatorService, BulkCalculatorService, CartService
+  shared/       # pipes (prata, peso) e componentes reutilizáveis
+  features/
+    routes/     # Smart Route Finder
+    crafting/   # Carrinho de Craft/Refino bulk
+    user-panel/ # Painel do Usuário
+  layout/       # nav bar / shell
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+### Cache e batching
 
-## Code scaffolding
+`CacheService` grava cotações no `LocalStorage` com TTL de ~20 minutos. Antes de
+qualquer chamada à API, `MarketDataService` verifica o cache por item; apenas os
+itens ausentes/expirados são buscados, agrupados em lotes de até 40 IDs por
+requisição para minimizar chamadas de rede.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### Matemática de jogo (aproximada)
 
-```bash
-ng generate component component-name
-```
+As fórmulas de RRR (Resource Return Rate), custo de Foco e economia de Diários em
+`core/services/rrr.util.ts` e `core/services/journal.util.ts` são aproximações
+documentadas em código — os valores exatos variam entre patches do jogo. Ajuste as
+constantes conforme necessário.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+## Desenvolvimento
 
 ```bash
-ng build
+npm install
+npm start          # ng serve — http://localhost:4200
+npm run build       # build de produção em dist/albion-profit-tool/browser
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+## Docker
 
 ```bash
-ng test
+docker compose up --build   # sobe em http://localhost:8080
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+O `Dockerfile` usa build multi-stage (Node 22 → build Angular; Nginx alpine →
+serve estático) com `nginx.conf` configurado para fallback de SPA e cache de
+assets com hash.
