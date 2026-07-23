@@ -6,7 +6,8 @@
     "enabled": true
   },
   "assets": {
-    "directory": "dist/albion-profit-tool/browser"
+    "directory": "dist/albion-profit-tool/browser",
+    "not_found_handling": "single-page-application"
   },
   "compatibility_flags": [
     "nodejs_compat"
