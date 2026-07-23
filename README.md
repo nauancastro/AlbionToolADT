@@ -65,3 +65,31 @@ docker compose up --build   # sobe em http://localhost:8080
 O `Dockerfile` usa build multi-stage (Node 22 → build Angular; Nginx alpine →
 serve estático) com `nginx.conf` configurado para fallback de SPA e cache de
 assets com hash.
+
+## Deploy no Cloudflare Workers
+
+Como é uma SPA 100% client-side (sem backend), o plano gratuito do Cloudflare
+Workers é suficiente. O `wrangler.jsonc` na raiz já configura o Worker para
+servir os arquivos estáticos de `dist/albion-profit-tool/browser` com
+`not_found_handling: "single-page-application"`, garantindo que rotas do
+Angular Router (`/rotas`, `/carrinho`, `/painel`) funcionem em refresh/link
+direto — não só via navegação interna.
+
+Passo a passo pela integração Git (sem precisar rodar nada localmente):
+
+1. Crie uma conta em [dash.cloudflare.com](https://dash.cloudflare.com) (grátis).
+2. **Workers & Pages** → **Create** → conecte o repositório `AlbionToolADT`.
+3. Na tela "Set up your application":
+   - **Project name**: use minúsculo, ex. `albion-profit-radar` (nomes de Worker
+     não podem ter maiúsculas) — mantenha igual ao campo `name` do
+     `wrangler.jsonc`, ou edite o `name` no arquivo pra bater com o que você
+     digitar aqui.
+   - **Build command**: `npm run build` (já vem preenchido)
+   - **Deploy command**: `npx wrangler deploy` (já vem preenchido — ele lê o
+     `wrangler.jsonc` do repositório, não precisa configurar diretório de saída
+     na UI)
+4. Clique em **Deploy**. A partir daí, todo push no branch configurado (`main`)
+   gera um deploy automático.
+
+Isso é uma etapa manual obrigatória: criar/conectar a conta Cloudflare exige
+login próprio, então não há como automatizar por aqui.
