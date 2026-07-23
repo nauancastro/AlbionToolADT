@@ -22,7 +22,7 @@ import { BulkResult } from '../models/calculation.model';
 import { MarketQuote } from '../models/market.model';
 import { MarketDataService } from './market-data.service';
 import { UserSettingsService } from './user-settings.service';
-import { calculateRrr, focusCostPerUnit, materialsConsumed } from './rrr.util';
+import { calculateRrr, focusCostEfficiency, focusCostPerUnit, materialsConsumed } from './rrr.util';
 import { itemsToFillJournal } from './journal.util';
 
 function quoteForCity(quotes: MarketQuote[] | undefined, city: City): MarketQuote | undefined {
@@ -111,12 +111,12 @@ export class BulkCalculatorService {
 
     const isBonusCity = REFINING_BONUS_CITY[item.resourceType] === item.craftCity;
     const rrr = calculateRrr({
-      spec: settings.specLevels[item.resourceType],
       isBonusCity,
-      islandBonusEnabled: settings.islandBonusEnabled,
+      islandStation: settings.islandBonusEnabled,
       dailyServerBonusEnabled: settings.dailyServerBonusEnabled,
       dailyServerBonusPercent: settings.dailyServerBonusPercent,
     });
+    const fce = focusCostEfficiency(settings.specLevels[item.resourceType], item.tier);
 
     const baseQty = line.rawPerRefinedByTier[item.tier];
     const rawUnitCost = rawQuote?.sellPriceMin ?? 0;
@@ -125,7 +125,7 @@ export class BulkCalculatorService {
 
     const materialsCostNoFocus = rawUnitCost * consumedNoFocus;
     const materialsCostWithFocus = rawUnitCost * consumedWithFocus;
-    const focusCostTotal = focusCostPerUnit(line.baseFocusCost, item.tier, item.enchant) * item.quantity;
+    const focusCostTotal = focusCostPerUnit(line.baseFocusCost, item.tier, item.enchant, fce) * item.quantity;
 
     const journalInfo = this.journalNetCost(
       item.useJournals,
@@ -186,12 +186,12 @@ export class BulkCalculatorService {
 
     const isBonusCity = GEAR_BONUS_CITY[item.category] === item.craftCity;
     const rrr = calculateRrr({
-      spec: settings.specLevels[primaryResource],
       isBonusCity,
-      islandBonusEnabled: settings.islandBonusEnabled,
+      islandStation: settings.islandBonusEnabled,
       dailyServerBonusEnabled: settings.dailyServerBonusEnabled,
       dailyServerBonusPercent: settings.dailyServerBonusPercent,
     });
+    const fce = focusCostEfficiency(settings.specLevels[primaryResource], item.tier);
 
     let materialsCostNoFocus = 0;
     let materialsCostWithFocus = 0;
@@ -210,7 +210,7 @@ export class BulkCalculatorService {
       totalWeight += baseQty * item.quantity * refinedItem.weight;
     }
 
-    const focusCostTotal = focusCostPerUnit(recipe.baseFocusCost, item.tier, item.enchant) * item.quantity;
+    const focusCostTotal = focusCostPerUnit(recipe.baseFocusCost, item.tier, item.enchant, fce) * item.quantity;
 
     const journalInfo = this.journalNetCost(
       item.useJournals,

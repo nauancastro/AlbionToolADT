@@ -1,6 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { City, GameServer, ResourceType } from '../models/enums';
-import { UserSettings, createDefaultUserSettings } from '../models/user-settings.model';
+import { City, GameServer, ResourceType, Tier } from '../models/enums';
+import { UserSettings, createDefaultUserSettings, normalizeSpecLevels } from '../models/user-settings.model';
 
 const STORAGE_KEY = 'albion-user-settings';
 
@@ -21,7 +21,8 @@ export class UserSettingsService {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return createDefaultUserSettings();
       const parsed = JSON.parse(raw) as Partial<UserSettings>;
-      return { ...createDefaultUserSettings(), ...parsed };
+      // A Spec pode vir no formato legado (um nível por linha) — normaliza para o formato por tier.
+      return { ...createDefaultUserSettings(), ...parsed, specLevels: normalizeSpecLevels(parsed.specLevels) };
     } catch {
       return createDefaultUserSettings();
     }
@@ -40,11 +41,15 @@ export class UserSettingsService {
     this.update({ server });
   }
 
-  setSpec(resourceType: ResourceType, value: number): void {
+  setSpec(resourceType: ResourceType, tier: Tier, value: number): void {
     const clamped = Math.max(0, Math.min(100, Math.round(value)));
+    const current = this._settings().specLevels;
     this.persist({
       ...this._settings(),
-      specLevels: { ...this._settings().specLevels, [resourceType]: clamped },
+      specLevels: {
+        ...current,
+        [resourceType]: { ...current[resourceType], [tier]: clamped },
+      },
     });
   }
 

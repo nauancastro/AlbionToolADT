@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CITY_OPTIONS } from '../../core/data/cities.data';
-import { City, GameServer, RESOURCE_LABELS, ResourceType } from '../../core/models/enums';
+import { City, GameServer, RESOURCE_LABELS, ResourceType, TIERS } from '../../core/models/enums';
 import { UserSettingsService } from '../../core/services/user-settings.service';
 
 @Component({
@@ -46,24 +46,30 @@ import { UserSettingsService } from '../../core/services/user-settings.service';
           Especialização (Spec) de Refino
         </h2>
         <p class="mb-4 text-xs text-slate-500">
-          Nível de 0 a 100 em cada árvore. Afeta a taxa de retorno de recursos (RRR) com e sem Foco.
+          No jogo atual a Spec é dividida por tier — cada tier (T4–T8) tem seu próprio nível de 0 a 100.
+          Ela não altera a taxa de retorno (RRR), mas reduz o custo de Foco (Focus Cost Efficiency):
+          nível 100 em todos os tiers reduz o custo de Foco para ~1/16.
         </p>
-        <div class="grid gap-4 sm:grid-cols-2">
+        <div class="space-y-4">
           @for (resource of resourceTypes; track resource) {
-            <label class="block">
-              <div class="mb-1 flex items-center justify-between text-sm">
-                <span class="text-slate-300">{{ resourceLabels[resource] }}</span>
-                <span class="font-mono font-semibold text-amber-400">{{ settings.settings().specLevels[resource] }}</span>
+            <div class="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+              <div class="mb-2 text-sm font-medium text-slate-300">{{ resourceLabels[resource] }}</div>
+              <div class="grid grid-cols-5 gap-2">
+                @for (tier of tiers; track tier) {
+                  <label class="block">
+                    <span class="mb-1 block text-center text-[11px] font-mono text-slate-500">T{{ tier }}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      [ngModel]="settings.settings().specLevels[resource][tier]"
+                      (ngModelChange)="settings.setSpec(resource, tier, $event)"
+                      class="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-center text-sm text-amber-400 focus:border-amber-500 focus:outline-none"
+                    />
+                  </label>
+                }
               </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                [ngModel]="settings.settings().specLevels[resource]"
-                (ngModelChange)="settings.setSpec(resource, $event)"
-                class="w-full accent-amber-500"
-              />
-            </label>
+            </div>
           }
         </div>
       </section>
@@ -100,7 +106,7 @@ import { UserSettingsService } from '../../core/services/user-settings.service';
               (ngModelChange)="settings.setIslandBonusEnabled($event)"
               class="h-4 w-4 accent-amber-500"
             />
-            <span class="text-sm text-slate-300">Bônus de Ilha (construção de refino no nível máximo)</span>
+            <span class="text-sm text-slate-300">Refinar em Ilha (estação pessoal, sem o bônus base de 18% da cidade)</span>
           </label>
 
           <div class="flex items-center gap-3">
@@ -185,6 +191,7 @@ export class UserPanelComponent {
 
   protected readonly servers = Object.values(GameServer);
   protected readonly resourceTypes = Object.values(ResourceType);
+  protected readonly tiers = TIERS;
   protected readonly resourceLabels = RESOURCE_LABELS;
   protected readonly allTaxableCities = CITY_OPTIONS;
   protected readonly allMarketCities = [...CITY_OPTIONS, City.BlackMarket];

@@ -7,7 +7,7 @@ import { OrderProfit, RefiningOpportunity } from '../models/calculation.model';
 import { MarketQuote } from '../models/market.model';
 import { UserSettingsService } from './user-settings.service';
 import { MarketDataService } from './market-data.service';
-import { calculateRrr, focusCostPerUnit, materialsConsumed } from './rrr.util';
+import { calculateRrr, focusCostEfficiency, focusCostPerUnit, materialsConsumed } from './rrr.util';
 
 export interface RouteFinderParams {
   buyCity: City;
@@ -58,12 +58,12 @@ export class RefiningCalculatorService {
 
           const isBonusCity = REFINING_BONUS_CITY[combo.resourceType] === params.sellCity;
           const rrr = calculateRrr({
-            spec: settings.specLevels[combo.resourceType],
             isBonusCity,
-            islandBonusEnabled: settings.islandBonusEnabled,
+            islandStation: settings.islandBonusEnabled,
             dailyServerBonusEnabled: settings.dailyServerBonusEnabled,
             dailyServerBonusPercent: settings.dailyServerBonusPercent,
           });
+          const fce = focusCostEfficiency(settings.specLevels[combo.resourceType], combo.tier);
 
           const consumedNoFocus = materialsConsumed(rawQuantityPerUnit, rrr.returnRateNoFocus);
           const consumedWithFocus = materialsConsumed(rawQuantityPerUnit, rrr.returnRateWithFocus);
@@ -103,7 +103,7 @@ export class RefiningCalculatorService {
             rawQuantityPerUnit,
             returnRateNoFocus: rrr.returnRateNoFocus,
             returnRateWithFocus: rrr.returnRateWithFocus,
-            focusCostPerUnit: focusCostPerUnit(line.baseFocusCost, combo.tier, combo.enchant),
+            focusCostPerUnit: focusCostPerUnit(line.baseFocusCost, combo.tier, combo.enchant, fce),
             costPerUnitNoFocus,
             costPerUnitWithFocus,
             taxRate,
